@@ -1,6 +1,8 @@
 const express = require("express");
 const User = require("../models/userModel");
 const bcrypt = require("bcrypt");
+const adminMiddleware = require("../middlewares/adminMiddleware");
+const partnerMiddleware = require("../middlewares/partnerMiddleware");
 const jwt = require("jsonwebtoken");
 const authMiddleware = require("../middlewares/authMiddleware");
 const EmailHelper = require("../utils/emailSender");
@@ -11,7 +13,7 @@ const router = express.Router();
 
 const otpGenerator = function () {
   return Math.floor((Math.random() * 10000) + 90000);
-}
+};
 
 router.post("/register", async (req, res) => {
   try {
@@ -87,29 +89,19 @@ router.get("/get-current-user", authMiddleware, async (req, res) => {
     success: true,
     message: 'You are authorized to go to the protected route!',
     data: user
-   })
+   });
 });
 
 // forgot password
 
 router.patch("/forgetpassword", async function (req, res) {
   try {
-    /****
-            * 1. You can ask for email
-            * 2. check if email is present or not
-            *  * if email is not present -> send a response to the user(user not found)
-            * 3. if email is present -> create basic otp -> and send to the email 
-            * 4. also store that otp -> in the userModel
-            * 5. to avoid that collison
-            *      response -> unique url with id of the user and that will form your reset password 
-            * 
-            * ***/
     if (req.body.email == undefined) {
       return res.status(401).json({
         status: "failure",
         message: "Please enter the email for forget Password"
       })
-    }
+    };
     // find the user -> going db -> getting it for the server
     let user = await User.findOne({ email: req.body.email });
     if (user == null) {
@@ -129,21 +121,18 @@ router.patch("/forgetpassword", async function (req, res) {
       message: "otp sent to your email",
     });
     // send the mail to there email -> otp
-    await EmailHelper(
-      "otp.html"
-      , user.email,
-      {
+    await EmailHelper( "otp.html", user.email, {
         name: user.name,
         otp: otp
-      });
+  });
   } catch (err) {
     res.status(500).json({
       message: err.message,
       status: "failure"
-    })
+    });
   }
   //  email
-})
+});
 
 
 router.patch("/resetpassword", async function (req, res) {
@@ -190,10 +179,19 @@ router.patch("/resetpassword", async function (req, res) {
     res.status(500).json({
       message: err.message,
       status: "failure"
-    })
+    });
   }
-
-
 })
-
+router.get("/admin", authMiddleware, adminMiddleware, async (req, res) => {
+  res.send({
+    success: true,
+    message: "You are an admin!",
+  });
+});
+router.get("/partner", authMiddleware, partnerMiddleware, async (req, res) => {
+  res.send({
+    success: true,
+    message: "You are a partner!",
+  });
+});
 module.exports = router;

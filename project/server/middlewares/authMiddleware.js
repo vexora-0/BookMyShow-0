@@ -9,4 +9,4 @@ module.exports = function(req , res , next) {
   } catch (error) {
     res.status(401).send({ success: false, message: "Token Invalid" });
   }
-}
+};

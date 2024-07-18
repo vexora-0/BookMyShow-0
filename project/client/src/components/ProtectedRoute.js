@@ -14,7 +14,7 @@ import {
 import { Link } from "react-router-dom";
 import { setUser } from "../redux/userSlice";
 
-function ProtectedRoute({ children }) {
+function ProtectedRoute({ children, role}) {
   const { user } = useSelector((state) => state.user);
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -86,7 +86,20 @@ function ProtectedRoute({ children }) {
       navigate("/login");
     }
   }, []);
-
+  useEffect(() => {
+    if (user && role && user.role !== role) {
+      message.error("You are not authorized to access this page");
+      if(user.role === 'admin') {
+        navigate("/admin");
+      }
+      else if(user.role === 'partner') {
+        navigate("/partner");
+      }
+      else {
+        navigate("/");
+      }
+    }
+  }, [user, role]);
   return (
     user && (
       <>
